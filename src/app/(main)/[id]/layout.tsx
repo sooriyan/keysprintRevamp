@@ -7,9 +7,31 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const resolvedParams = await params;
     const username = decodeURIComponent(resolvedParams.id);
+    const title = `${username} - Keysprint Profile`;
+    const description = `View ${username}'s typing stats, badges, and track record on Keysprint.`;
+
     return {
-        title: `${username} - Keysprint Profile`,
-        description: `View ${username}'s typing stats, badges, and track record on Keysprint.`,
+        title,
+        description,
+        openGraph: {
+            title,
+            description,
+            url: `https://keysprint.in/${encodeURIComponent(username)}`,
+            images: [
+                {
+                    url: '/og-image.png',
+                    width: 1200,
+                    height: 630,
+                    alt: `${username}'s Keysprint Profile`,
+                }
+            ]
+        },
+        twitter: {
+            card: "summary_large_image",
+            title,
+            description,
+            images: ['/og-image.png'],
+        },
         robots: {
             index: false,
             follow: false,

@@ -20,9 +20,31 @@ export async function generateMetadata({
     const selectedProtocol = (protocol as string) || "standard";
     const usernameDecoded = decodeURIComponent(username);
 
+    const title = `${usernameDecoded}'s ${selectedProtocol.charAt(0).toUpperCase() + selectedProtocol.slice(1)} Stats | Keysprint`;
+    const description = `Check out ${usernameDecoded}'s competitive typing stats for the ${selectedProtocol} protocol. Can you beat their WPM?`;
+
     return {
-        title: `${usernameDecoded}'s ${selectedProtocol.charAt(0).toUpperCase() + selectedProtocol.slice(1)} Stats | Keysprint`,
-        description: `Check out ${usernameDecoded}'s competitive typing stats for the ${selectedProtocol} protocol. Can you beat their WPM?`,
+        title,
+        description,
+        openGraph: {
+            title,
+            description,
+            url: `https://keysprint.in/share/${encodeURIComponent(username)}?protocol=${selectedProtocol}`,
+            images: [
+                {
+                    url: '/og-image.png',
+                    width: 1200,
+                    height: 630,
+                    alt: title,
+                }
+            ]
+        },
+        twitter: {
+            card: "summary_large_image",
+            title,
+            description,
+            images: ['/og-image.png'],
+        }
     };
 }
 
