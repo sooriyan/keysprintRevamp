@@ -32,9 +32,9 @@ export default function LeaderboardPage() {
     }, [activeTab]);
 
     const topThree = leaderboard.slice(0, 3);
-    const tableData = leaderboard.slice(3).map((item, idx) => ({
+    const tableData = leaderboard.map((item, idx) => ({
         ...item,
-        rank: ((page - 1) * pagination.limit + idx + 4).toString().padStart(2, '0')
+        rank: ((page - 1) * pagination.limit + idx + 1).toString().padStart(2, '0')
     }));
 
     return (

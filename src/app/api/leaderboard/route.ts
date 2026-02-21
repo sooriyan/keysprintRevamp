@@ -29,56 +29,46 @@ export async function GET(req: Request) {
             matchQuery.challengeType = protocol;
         }
 
-        // Aggregate results to find the highest WPM per user in the given timeframe
-        const results = await TypingResult.aggregate([
-            { $match: matchQuery },
-            { $sort: { wpm: -1 } },
-            {
-                $group: {
-                    _id: "$user",
-                    topSpeed: { $first: "$wpm" },
-                    avgWpm: { $avg: "$wpm" },
-                    accuracy: { $max: "$accuracy" },
-                    testCount: { $sum: 1 }
-                }
-            },
+        // Aggregate results by looking up users in DB and their best scores
+        const results = await User.aggregate([
             {
                 $lookup: {
-                    from: "users",
-                    localField: "_id",
-                    foreignField: "_id",
-                    as: "userData"
+                    from: "typingresults",
+                    let: { userId: "$_id" },
+                    pipeline: [
+                        { $match: { $expr: { $eq: ["$user", "$$userId"] } } },
+                        { $match: matchQuery }
+                    ],
+                    as: "tests"
                 }
             },
-            { $unwind: "$userData" },
-            { $sort: { topSpeed: -1 } },
-            { $skip: skip },
-            { $limit: limit },
+            {
+                $addFields: {
+                    testCount: { $size: "$tests" },
+                    topSpeed: { $max: "$tests.wpm" },
+                    avgWpm: { $avg: "$tests.wpm" },
+                    accuracy: { $max: "$tests.accuracy" }
+                }
+            },
             {
                 $project: {
-                    user: "$userData.name",
-                    image: "$userData.image",
-                    type: { $cond: [{ $ifNull: ["$userData.isPro", false] }, "Pro Member", "Member"] },
-                    avgWpm: { $round: ["$avgWpm", 0] },
-                    topSpeed: 1,
-                    accuracy: 1,
+                    _id: 1,
+                    user: "$name",
+                    image: "$image",
+                    type: { $cond: [{ $ifNull: ["$isPro", false] }, "Pro Member", "Member"] },
+                    avgWpm: { $ifNull: [{ $round: ["$avgWpm", 0] }, 0] },
+                    topSpeed: { $ifNull: ["$topSpeed", 0] },
+                    accuracy: { $ifNull: ["$accuracy", 0] },
                     trend: { $cond: [{ $gt: ["$testCount", 5] }, "up", "flat"] }
                 }
-            }
-        ]);
-
-        // Get total count for pagination
-        const totalCountParams = await TypingResult.aggregate([
-            { $match: matchQuery },
-            {
-                $group: {
-                    _id: "$user"
-                }
             },
-            { $count: "total" }
+            { $sort: { topSpeed: -1, user: 1 } },
+            { $skip: skip },
+            { $limit: limit }
         ]);
 
-        const totalUsers = totalCountParams.length > 0 ? totalCountParams[0].total : 0;
+        // Get total count of all users for pagination
+        const totalUsers = await User.countDocuments();
         const totalPages = Math.ceil(totalUsers / limit);
 
         return NextResponse.json({
