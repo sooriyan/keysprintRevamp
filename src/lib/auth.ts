@@ -71,11 +71,21 @@ export const authOptions: NextAuthOptions = {
             }
             return true;
         },
-        async jwt({ token, user }) {
-            if (user) {
+        async jwt({ token, user, account }) {
+            if (account && user) {
+                if (account.provider === 'google') {
+                    await dbConnect();
+                    const dbUser = await User.findOne({ email: user.email });
+                    if (dbUser) {
+                        token.id = dbUser._id.toString();
+                    } else {
+                        token.id = user.id;
+                    }
+                } else {
+                    token.id = user.id;
+                }
+            } else if (user) {
                 token.id = user.id;
-
-                // Custom db query to attach custom profile fields to token if desired
             }
             return token;
         },

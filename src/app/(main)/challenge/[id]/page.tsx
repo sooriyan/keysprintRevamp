@@ -129,11 +129,34 @@ export default function ChallengeGamePage() {
     };
 
     const resetGame = () => {
+        const textArray = CHALLENGE_TEXTS[id] || CHALLENGE_TEXTS["standard"];
+        if (id !== 'daily') {
+            let nextText = textArray[Math.floor(Math.random() * textArray.length)];
+            // If there's more than one possible text, ensure we get a new one to prevent perceived non-resets
+            if (textArray.length > 1) {
+                while (nextText === originalText) {
+                    nextText = textArray[Math.floor(Math.random() * textArray.length)];
+                }
+            }
+            // Use setTimeout to ensure state updates sequentially if React batches them too aggressively
+            setTimeout(() => {
+                setOriginalText(nextText);
+            }, 0);
+        }
+
         setInput("");
         setStatus("idle");
         setStartTime(null);
         setEndTime(null);
-        if (inputRef.current) inputRef.current.focus();
+        setStats({ wpm: 0, accuracy: 0, time: 0 });
+
+        // Force focus back to textarea
+        setTimeout(() => {
+            if (inputRef.current) {
+                inputRef.current.value = ""; // Force DOM clear
+                inputRef.current.focus();
+            }
+        }, 10);
     };
 
     // Render characters with styling based on correctness
@@ -234,22 +257,19 @@ export default function ChallengeGamePage() {
                             ref={inputRef}
                             value={input}
                             onChange={handleChange}
-                            className="opacity-0 absolute top-0 left-0 w-full h-full cursor-text resize-none"
+                            className="opacity-0 absolute top-0 left-0 w-full h-full cursor-text resize-none z-0"
                             autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"
                             spellCheck="false"
                         />
 
-                        {status === "idle" && (
-                            <div className="flex justify-center mt-12 animate-pulse">
-                                <p className="text-sm font-bold text-slate-400 dark:text-slate-500 tracking-widest uppercase">Start typing to begin</p>
-                            </div>
-                        )}
-                        {status === "playing" && (
-                            <div className="flex justify-between items-center mt-12">
-                                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Typing...</div>
-                                <button onClick={resetGame} className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-rose-500 transition-colors tooltip overflow-hidden group">
+                        {(status === "idle" || status === "playing") && (
+                            <div className="flex justify-between items-center mt-12 relative z-50 pointer-events-none">
+                                <div className={`text-xs font-bold text-slate-400 uppercase tracking-widest ${status === 'idle' ? 'animate-pulse' : ''} pointer-events-auto`}>
+                                    {status === "idle" ? "Start typing to begin" : "Typing..."}
+                                </div>
+                                <button onClick={resetGame} className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-rose-500 transition-colors tooltip overflow-hidden group pointer-events-auto">
                                     <RefreshCw className="w-5 h-5 group-hover:-rotate-180 transition-transform duration-500" />
                                 </button>
                             </div>
