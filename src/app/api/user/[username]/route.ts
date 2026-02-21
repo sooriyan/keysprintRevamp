@@ -52,7 +52,12 @@ export async function GET(
                 highestAccuracy,
             },
             badges: unlockedBadges
-        }, { status: 200 });
+        }, {
+            status: 200,
+            headers: {
+                'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120'
+            }
+        });
 
     } catch (error: any) {
         console.error("Public profile fetch error:", error);
