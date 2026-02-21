@@ -8,6 +8,24 @@ import Link from "next/link";
 
 const iconMap: Record<string, any> = { Zap, Flame, Target, Moon, Shield, Crown, Star };
 
+export async function generateMetadata({
+    params,
+    searchParams
+}: {
+    params: Promise<{ username: string }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}): Promise<import('next').Metadata> {
+    const { username } = await params;
+    const { protocol } = await searchParams;
+    const selectedProtocol = (protocol as string) || "standard";
+    const usernameDecoded = decodeURIComponent(username);
+
+    return {
+        title: `${usernameDecoded}'s ${selectedProtocol.charAt(0).toUpperCase() + selectedProtocol.slice(1)} Stats | Keysprint`,
+        description: `Check out ${usernameDecoded}'s competitive typing stats for the ${selectedProtocol} protocol. Can you beat their WPM?`,
+    };
+}
+
 export default async function SharedStatsPage({
     params,
     searchParams
