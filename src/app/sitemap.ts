@@ -7,6 +7,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     const routes = [
         '',
         '/challenge',
+        '/challenge/standard',
+        '/challenge/paragraph',
+        '/challenge/developer',
+        '/challenge/daily',
         '/leaderboard',
         '/login',
         '/signup',
