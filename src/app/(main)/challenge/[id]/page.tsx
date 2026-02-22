@@ -207,20 +207,20 @@ export default function ChallengeGamePage() {
                         {session && saving && <p className="text-slate-500 text-sm font-medium mb-8">Saving to leaderboard...</p>}
                         {session && !saving && <p className="text-emerald-500 text-sm font-bold mb-8">Result saved to your profile!</p>}
 
-                        <div className="flex gap-6 sm:gap-12 mb-10">
-                            <div className="text-center">
-                                <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex justify-center items-center gap-1.5"><Zap className="w-4 h-4" /> WPM</div>
-                                <div className="text-5xl font-black text-slate-900 dark:text-white">{stats.wpm}</div>
+                        <div className="flex flex-row justify-center items-center gap-4 sm:gap-12 mb-10 w-full">
+                            <div className="text-center flex-1">
+                                <div className="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex justify-center items-center gap-1 sm:gap-1.5"><Zap className="w-3 h-3 sm:w-4 sm:h-4" /> WPM</div>
+                                <div className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white">{stats.wpm}</div>
                             </div>
-                            <div className="w-px bg-slate-200 dark:bg-slate-700"></div>
-                            <div className="text-center">
-                                <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex justify-center items-center gap-1.5"><Target className="w-4 h-4" /> ACC</div>
-                                <div className="text-5xl font-black text-slate-900 dark:text-white">{stats.accuracy}%</div>
+                            <div className="w-px h-12 sm:h-16 bg-slate-200 dark:bg-slate-700"></div>
+                            <div className="text-center flex-1">
+                                <div className="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex justify-center items-center gap-1 sm:gap-1.5"><Target className="w-3 h-3 sm:w-4 sm:h-4" /> ACC</div>
+                                <div className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white">{stats.accuracy}%</div>
                             </div>
-                            <div className="w-px bg-slate-200 dark:bg-slate-700"></div>
-                            <div className="text-center">
-                                <div className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex justify-center items-center gap-1.5"><Clock className="w-4 h-4" /> TIME</div>
-                                <div className="text-5xl font-black text-slate-900 dark:text-white">{stats.time}s</div>
+                            <div className="w-px h-12 sm:h-16 bg-slate-200 dark:bg-slate-700"></div>
+                            <div className="text-center flex-1">
+                                <div className="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex justify-center items-center gap-1 sm:gap-1.5"><Clock className="w-3 h-3 sm:w-4 sm:h-4" /> TIME</div>
+                                <div className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white">{stats.time}s</div>
                             </div>
                         </div>
 
