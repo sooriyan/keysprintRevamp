@@ -79,7 +79,7 @@ export default function ChallengeGamePage() {
         const value = e.target.value;
         setInput(value);
 
-        if (status === "idle" && value.length === 1) {
+        if (status === "idle" && value.length > 0) {
             setStatus("playing");
             setStartTime(Date.now());
         }
@@ -257,6 +257,23 @@ export default function ChallengeGamePage() {
                             ref={inputRef}
                             value={input}
                             onChange={handleChange}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Tab') {
+                                    e.preventDefault();
+
+                                    const value = input + "  ";
+                                    setInput(value);
+
+                                    if (status === "idle" && value.length > 0) {
+                                        setStatus("playing");
+                                        setStartTime(Date.now());
+                                    }
+
+                                    if (value.length >= originalText.length) {
+                                        finishGame(value);
+                                    }
+                                }
+                            }}
                             className="opacity-0 absolute top-0 left-0 w-full h-full cursor-text resize-none z-0"
                             autoComplete="off"
                             autoCorrect="off"

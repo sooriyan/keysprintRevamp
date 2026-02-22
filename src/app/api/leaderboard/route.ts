@@ -50,6 +50,7 @@ export async function GET(req: Request) {
                     accuracy: { $max: "$tests.accuracy" }
                 }
             },
+            { $match: { testCount: { $gt: 0 } } },
             {
                 $project: {
                     _id: 1,
@@ -67,9 +68,30 @@ export async function GET(req: Request) {
             { $limit: limit }
         ]);
 
-        // Get total count of all users for pagination
-        const totalUsers = await User.countDocuments();
-        const totalPages = Math.ceil(totalUsers / limit);
+        // Get total count of all users for pagination based on the same mapping
+        const [countResult] = await User.aggregate([
+            {
+                $lookup: {
+                    from: "typingresults",
+                    let: { userId: "$_id" },
+                    pipeline: [
+                        { $match: { $expr: { $eq: ["$user", "$$userId"] } } },
+                        { $match: matchQuery }
+                    ],
+                    as: "tests"
+                }
+            },
+            {
+                $addFields: {
+                    testCount: { $size: "$tests" }
+                }
+            },
+            { $match: { testCount: { $gt: 0 } } },
+            { $count: "total" }
+        ]);
+
+        const totalUsers = countResult?.total || 0;
+        const totalPages = Math.max(1, Math.ceil(totalUsers / limit));
 
         return NextResponse.json({
             success: true,
