@@ -61,16 +61,22 @@ export default function PrivacyPage() {
                         </section>
 
                         <section>
-                            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Analytics & Tracking</h2>
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Analytics & Advertising</h2>
+                            <p className="text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                                We use cookies and similar tracking technologies to access or store information. Specific information about how we use such technologies and how you can refuse certain cookies is set out in our Cookie Notice.
+                            </p>
+                            <p className="text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                                <strong>Google AdSense:</strong> We use Google AdSense to display advertisements on our website. Third-party vendors, including Google, use cookies to serve ads based on your prior visits to our website or other websites. Google's use of advertising cookies enables it and its partners to serve ads to you based on your visit to your sites and/or other sites on the Internet.
+                            </p>
                             <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                                We may use cookies and similar tracking technologies to access or store information. Specific information about how we use such technologies and how you can refuse certain cookies is set out in our Cookie Notice.
+                                You may opt out of personalized advertising by visiting <a href="https://myadcenter.google.com/" target="_blank" rel="noopener noreferrer" className="text-[#0ea5e9] hover:underline font-medium">Ads Settings</a>. Alternatively, you can opt out of a third-party vendor's use of cookies for personalized advertising by visiting <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer" className="text-[#0ea5e9] hover:underline font-medium">www.aboutads.info</a>.
                             </p>
                         </section>
 
                         <section>
                             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">Contact Us</h2>
                             <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-                                If you have questions or comments about this Privacy Policy, please email us at <a href="mailto:privacy@keysprint.in" className="text-[#0ea5e9] hover:underline font-medium">privacy@keysprint.in</a>.
+                                If you have questions or comments about this Privacy Policy, please email us at <a href="mailto:sooriyan10898@gmail.com" className="text-[#0ea5e9] hover:underline font-medium">sooriyan10898@gmail.com</a>.
                             </p>
                         </section>
                     </div>
