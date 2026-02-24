@@ -61,7 +61,7 @@ export const authOptions: NextAuthOptions = {
 
                 if (!existingUser) {
                     await User.create({
-                        name: (user.name as string) || 'Anonymous Sprinter',
+                        name: (user.name as string)?.replace(/\s+/g, '') || 'AnonymousSprinter',
                         email: user.email as string,
                         image: (user.image as string) || '',
                         authProvider: 'google',

@@ -34,6 +34,7 @@ export function Navbar() {
     const links = [
         { href: "/dashboard", label: "Dashboard" },
         { href: "/challenge", label: "Challenges" },
+        { href: "/custom-challenges", label: "Customs" },
         { href: "/leaderboard", label: "Leaderboard" },
     ];
 
