@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ChevronRight, Keyboard, Zap, Trophy, Activity, Type, AlignLeft, Code2, CalendarDays, MousePointer2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/ui/logo";
 
 export default function LandingPage() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -65,6 +66,18 @@ export default function LandingPage() {
         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-cyan-500/10 blur-[120px]" />
         <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/10 blur-[120px]" />
       </div>
+
+      {/* Simple Header for Logo */}
+      <header className="absolute top-0 left-0 w-full p-6 sm:px-10 z-50 flex items-center justify-between">
+        <Link href="/">
+          <Logo className="text-slate-900 dark:text-white" textClassName="text-slate-900 dark:text-white" />
+        </Link>
+        <div className="flex gap-4">
+          {/* Adding sign in/up links here as convenience */}
+          <Link href="/login" className="hidden sm:inline-flex text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors items-center">Sign In</Link>
+          <Link href="/signup" className="text-sm font-semibold bg-[#22d3ee] hover:bg-[#06b6d4] text-white px-5 py-2.5 rounded-xl transition-colors">Sign Up</Link>
+        </div>
+      </header>
 
       {/* HERO SECTION */}
       <section className="relative w-full min-h-[90vh] flex flex-col items-center justify-center pt-20 px-4 sm:px-6 z-10">
