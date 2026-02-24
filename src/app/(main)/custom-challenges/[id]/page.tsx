@@ -22,6 +22,8 @@ export default function PlayCustomChallengePage() {
     const [startTime, setStartTime] = useState<number | null>(null);
     const [endTime, setEndTime] = useState<number | null>(null);
     const [stats, setStats] = useState({ wpm: 0, accuracy: 0, time: 0 });
+    const [testMissedChars, setTestMissedChars] = useState<string[]>([]);
+    const [testMissedWords, setTestMissedWords] = useState<string[]>([]);
 
     // Review State
     const [rating, setRating] = useState<"Easy" | "Medium" | "Hard" | "">("");
@@ -102,6 +104,8 @@ export default function PlayCustomChallengePage() {
         const wpm = Math.round((correctChars / 5) / (timeTakenMin || 1));
 
         setStats({ wpm, accuracy, time: Math.round(timeTakenSec) });
+        setTestMissedChars(Object.entries(missedChars).sort((a, b) => b[1] - a[1]).slice(0, 3).map(e => e[0]));
+        setTestMissedWords(Object.entries(missedWords).sort((a, b) => b[1] - a[1]).slice(0, 3).map(e => e[0]));
         // Can optionally post score to global leaderboard from here too if needed
         // Since it's a typing test, we can use the same generic results endpoint:
         fetch("/api/results", {
@@ -124,6 +128,8 @@ export default function PlayCustomChallengePage() {
         setStartTime(null);
         setEndTime(null);
         setStats({ wpm: 0, accuracy: 0, time: 0 });
+        setTestMissedChars([]);
+        setTestMissedWords([]);
         setTimeout(() => inputRef.current?.focus(), 10);
     };
 
@@ -225,6 +231,51 @@ export default function PlayCustomChallengePage() {
                             <div className="text-center flex-1">
                                 <div className="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex justify-center items-center gap-1 sm:gap-1.5"><Clock className="w-3 h-3 sm:w-4 sm:h-4" /> TIME</div>
                                 <div className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white">{stats.time}s</div>
+                            </div>
+                        </div>
+
+                        {/* Test Insights Analytics */}
+                        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 mb-10 text-left">
+                            <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700/50 flex flex-col justify-center">
+                                <span className="text-xs font-bold text-amber-500 tracking-widest uppercase mb-3 block">Pain Points</span>
+                                {testMissedChars.length > 0 || testMissedWords.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {testMissedChars.length > 0 && (
+                                            <div>
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Keys</span>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {testMissedChars.map((l: string, i: number) => (
+                                                        <span key={i} className="px-2 py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono text-xs font-bold rounded-lg border border-amber-200 dark:border-amber-500/20 shadow-sm">{l}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {testMissedWords.length > 0 && (
+                                            <div>
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Word Sequences</span>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {testMissedWords.map((w: string, i: number) => (
+                                                        <span key={i} className="px-2 py-1 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 font-mono text-xs font-bold rounded-lg border border-rose-200 dark:border-rose-500/20 shadow-sm">{w}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
+                                        Flawless execution! You didn't miss any characters.
+                                    </p>
+                                )}
+                            </div>
+                            <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700/50 flex flex-col justify-center">
+                                <span className="text-xs font-bold text-purple-500 tracking-widest uppercase mb-3 block">Area to Improve</span>
+                                <p className="text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
+                                    {stats.accuracy < 90
+                                        ? "Accuracy is crucial! Slow down and focus on hitting every key cleanly instead of pushing raw speed."
+                                        : stats.accuracy < 96
+                                            ? "Solid typing! Try to eliminate those few remaining typos to significantly boost your net WPM."
+                                            : "Incredible precision! You can start pushing your boundaries on speed since your accuracy is locked in."}
+                                </p>
                             </div>
                         </div>
 
