@@ -2,12 +2,14 @@
 
 import React, { useRef } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ChevronRight, Keyboard, Zap, Trophy, Activity, Type, AlignLeft, Code2, CalendarDays, MousePointer2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 
 export default function LandingPage() {
+  const { data: session } = useSession();
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -72,10 +74,21 @@ export default function LandingPage() {
         <Link href="/">
           <Logo className="text-slate-900 dark:text-white" textClassName="text-slate-900 dark:text-white" />
         </Link>
-        <div className="flex gap-4">
-          {/* Adding sign in/up links here as convenience */}
-          <Link href="/login" className="hidden sm:inline-flex text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors items-center">Sign In</Link>
-          <Link href="/signup" className="text-sm font-semibold bg-[#22d3ee] hover:bg-[#06b6d4] text-white px-5 py-2.5 rounded-xl transition-colors">Sign Up</Link>
+        <div className="flex gap-4 items-center">
+          {session ? (
+            <Link href="/dashboard" className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-slate-700 bg-slate-200 dark:bg-slate-800 overflow-hidden flex items-center justify-center hover:border-cyan-500 dark:hover:border-cyan-400 transition-colors">
+              {session.user?.image ? (
+                <img src={session.user.image} alt="User Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-xs font-black text-slate-700 dark:text-slate-300">{session.user?.name?.charAt(0) || "U"}</span>
+              )}
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className="hidden sm:inline-flex text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors items-center">Sign In</Link>
+              <Link href="/signup" className="text-sm font-semibold bg-[#22d3ee] hover:bg-[#06b6d4] text-white px-5 py-2.5 rounded-xl transition-colors">Sign Up</Link>
+            </>
+          )}
         </div>
       </header>
 
