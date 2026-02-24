@@ -8,6 +8,10 @@ export interface ITypingResult extends Document {
     timeTaken: number;
     missedChars?: Map<string, number>;
     missedWords?: Map<string, number>;
+    avgTimeBetweenLetters?: number;
+    avgTimeBetweenWords?: number;
+    maxTimeBetweenLetters?: number;
+    maxTimeBetweenWords?: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -22,7 +26,7 @@ const TypingResultSchema: Schema = new Schema(
         challengeType: {
             type: String,
             required: true,
-            enum: ['standard', 'paragraph', 'developer', 'daily'],
+            enum: ['standard', 'paragraph', 'developer', 'daily', 'custom'],
         },
         wpm: {
             type: Number,
@@ -45,6 +49,22 @@ const TypingResultSchema: Schema = new Schema(
             type: Map,
             of: Number,
             default: {},
+        },
+        avgTimeBetweenLetters: {
+            type: Number,
+            default: 0,
+        },
+        avgTimeBetweenWords: {
+            type: Number,
+            default: 0,
+        },
+        maxTimeBetweenLetters: {
+            type: Number,
+            default: 0,
+        },
+        maxTimeBetweenWords: {
+            type: Number,
+            default: 0,
         },
     },
     {

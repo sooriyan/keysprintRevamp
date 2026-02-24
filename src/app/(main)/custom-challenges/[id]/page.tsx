@@ -24,6 +24,10 @@ export default function PlayCustomChallengePage() {
     const [stats, setStats] = useState({ wpm: 0, accuracy: 0, time: 0 });
     const [testMissedChars, setTestMissedChars] = useState<string[]>([]);
     const [testMissedWords, setTestMissedWords] = useState<string[]>([]);
+    const [avgKeyDelay, setAvgKeyDelay] = useState(0);
+    const [avgWordDelay, setAvgWordDelay] = useState(0);
+    const [maxKeyDelay, setMaxKeyDelay] = useState(0);
+    const [maxWordDelay, setMaxWordDelay] = useState(0);
 
     // Review State
     const [rating, setRating] = useState<"Easy" | "Medium" | "Hard" | "">("");
@@ -32,6 +36,10 @@ export default function PlayCustomChallengePage() {
     const [reviewError, setReviewError] = useState("");
 
     const inputRef = useRef<HTMLTextAreaElement>(null);
+    const lastKeyTimeRef = useRef<number>(0);
+    const lastWordTimeRef = useRef<number>(0);
+    const maxKeyDelayRef = useRef<number>(0);
+    const maxWordDelayRef = useRef<number>(0);
 
     useEffect(() => {
         fetch(`/api/custom-challenges/${id}`)
@@ -57,7 +65,25 @@ export default function PlayCustomChallengePage() {
 
         if (status === "idle" && value.length === 1) {
             setStatus("playing");
-            setStartTime(Date.now());
+            const now = Date.now();
+            setStartTime(now);
+            lastKeyTimeRef.current = now;
+            lastWordTimeRef.current = now;
+            maxKeyDelayRef.current = 0;
+            maxWordDelayRef.current = 0;
+        }
+
+        if (status === "playing" && value.length > input.length) {
+            const now = Date.now();
+            const keyDelay = now - lastKeyTimeRef.current;
+            maxKeyDelayRef.current = Math.max(maxKeyDelayRef.current, keyDelay);
+            lastKeyTimeRef.current = now;
+
+            if (value.endsWith(' ') && !input.endsWith(' ')) {
+                const wordDelay = now - lastWordTimeRef.current;
+                maxWordDelayRef.current = Math.max(maxWordDelayRef.current, wordDelay);
+                lastWordTimeRef.current = now;
+            }
         }
 
         if (value.length >= challenge.content.length) {
@@ -103,9 +129,20 @@ export default function PlayCustomChallengePage() {
         const accuracy = Math.round((correctChars / challenge.content.length) * 100);
         const wpm = Math.round((correctChars / 5) / (timeTakenMin || 1));
 
+        const timeTakenMs = end - (startTime || end);
+        const avgCharTime = Math.round(timeTakenMs / (challenge.content.length || 1));
+        const avgWordTime = Math.round(timeTakenMs / (originalWords.length || 1));
+
+        const finalWordDelay = end - lastWordTimeRef.current;
+        const finalMaxWordDelay = Math.max(maxWordDelayRef.current, finalWordDelay);
+
         setStats({ wpm, accuracy, time: Math.round(timeTakenSec) });
         setTestMissedChars(Object.entries(missedChars).sort((a, b) => b[1] - a[1]).slice(0, 3).map(e => e[0]));
         setTestMissedWords(Object.entries(missedWords).sort((a, b) => b[1] - a[1]).slice(0, 3).map(e => e[0]));
+        setAvgKeyDelay(avgCharTime);
+        setAvgWordDelay(avgWordTime);
+        setMaxKeyDelay(maxKeyDelayRef.current);
+        setMaxWordDelay(finalMaxWordDelay);
         // Can optionally post score to global leaderboard from here too if needed
         // Since it's a typing test, we can use the same generic results endpoint:
         fetch("/api/results", {
@@ -117,7 +154,11 @@ export default function PlayCustomChallengePage() {
                 accuracy,
                 timeTaken: Math.round(timeTakenSec),
                 missedChars,
-                missedWords
+                missedWords,
+                avgTimeBetweenLetters: avgCharTime,
+                avgTimeBetweenWords: avgWordTime,
+                maxTimeBetweenLetters: maxKeyDelayRef.current,
+                maxTimeBetweenWords: finalMaxWordDelay
             })
         }).catch(err => console.error(err));
     };
@@ -130,6 +171,14 @@ export default function PlayCustomChallengePage() {
         setStats({ wpm: 0, accuracy: 0, time: 0 });
         setTestMissedChars([]);
         setTestMissedWords([]);
+        setAvgKeyDelay(0);
+        setAvgWordDelay(0);
+        setMaxKeyDelay(0);
+        setMaxWordDelay(0);
+        lastKeyTimeRef.current = 0;
+        lastWordTimeRef.current = 0;
+        maxKeyDelayRef.current = 0;
+        maxWordDelayRef.current = 0;
         setTimeout(() => inputRef.current?.focus(), 10);
     };
 
@@ -235,7 +284,7 @@ export default function PlayCustomChallengePage() {
                         </div>
 
                         {/* Test Insights Analytics */}
-                        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 mb-10 text-left">
+                        <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-10 text-left">
                             <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700/50 flex flex-col justify-center">
                                 <span className="text-xs font-bold text-amber-500 tracking-widest uppercase mb-3 block">Pain Points</span>
                                 {testMissedChars.length > 0 || testMissedWords.length > 0 ? (
@@ -276,6 +325,46 @@ export default function PlayCustomChallengePage() {
                                             ? "Solid typing! Try to eliminate those few remaining typos to significantly boost your net WPM."
                                             : "Incredible precision! You can start pushing your boundaries on speed since your accuracy is locked in."}
                                 </p>
+                            </div>
+                            <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700/50 flex flex-col justify-center">
+                                <span className="text-xs font-bold text-cyan-500 tracking-widest uppercase mb-3 block">Cadence Profile</span>
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <div className="flex flex-col mb-1.5">
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Avg / Key</span>
+                                                <span className="text-lg font-black text-slate-900 dark:text-white leading-none whitespace-nowrap mt-1">{avgKeyDelay} <span className="text-xs text-slate-400 font-bold">ms</span></span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="flex flex-col mb-1.5">
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Max / Key</span>
+                                                <span className="text-lg font-black text-slate-900 dark:text-white leading-none whitespace-nowrap mt-1">{maxKeyDelay} <span className="text-xs text-slate-400 font-bold">ms</span></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="w-full bg-slate-200 dark:bg-slate-700/50 h-2 rounded-full overflow-hidden">
+                                        <div className="bg-cyan-500 h-full rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, Math.max(10, (100 - (avgKeyDelay / 10))))}%` }}></div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4 pt-2">
+                                        <div>
+                                            <div className="flex flex-col mb-1.5">
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Avg / Word</span>
+                                                <span className="text-lg font-black text-slate-900 dark:text-white leading-none whitespace-nowrap mt-1">{avgWordDelay} <span className="text-xs text-slate-400 font-bold">ms</span></span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="flex flex-col mb-1.5">
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Max / Word</span>
+                                                <span className="text-lg font-black text-slate-900 dark:text-white leading-none whitespace-nowrap mt-1">{maxWordDelay} <span className="text-xs text-slate-400 font-bold">ms</span></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="w-full bg-slate-200 dark:bg-slate-700/50 h-2 rounded-full overflow-hidden">
+                                        <div className="bg-blue-500 h-full rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, Math.max(10, (100 - (avgWordDelay / 50))))}%` }}></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
