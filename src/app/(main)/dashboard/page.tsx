@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Activity, Trophy, Flame, Target, CalendarDays, Zap, Shield, Crown, Clock, Star, TrendingUp, Keyboard, Moon, ChevronDown, CheckCircle2, Type, AlignLeft, Code2 } from "lucide-react";
+import { Activity, Trophy, Flame, Target, CalendarDays, Zap, Shield, Crown, Clock, Star, TrendingUp, Keyboard, Moon, ChevronDown, CheckCircle2, Type, AlignLeft, Code2, Brain } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -33,6 +33,7 @@ export default function DashboardPage() {
     const [achievements, setAchievements] = useState<any>({ unlocked: [], allList: [] });
     const [recentTests, setRecentTests] = useState<any[]>([]);
     const [performanceHistory, setPerformanceHistory] = useState<any[]>([]);
+    const [analytics, setAnalytics] = useState({ weakestArea: "", strongestArea: "", accuracyInsight: "", recommendation: "", suggestedChallenge: "", struggledLetters: [] as string[] });
     const [graphRange, setGraphRange] = useState<"7" | "30" | "all">("30");
     const [isShareOpen, setIsShareOpen] = useState(false);
     const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
@@ -67,6 +68,7 @@ export default function DashboardPage() {
                     if (data.stats) {
                         setStats(data.stats);
                         setAchievements(data.achievements);
+                        if (data.analytics) setAnalytics(data.analytics);
                         if (data.recentTests) setRecentTests(data.recentTests);
                         if (data.performanceHistory) setPerformanceHistory(data.performanceHistory);
                     }
@@ -172,8 +174,93 @@ export default function DashboardPage() {
                 </div>
             </div>
 
+            {/* AI Training Insights Block */}
+            <div className="w-full bg-gradient-to-br from-indigo-50 dark:from-indigo-500/10 to-purple-50 dark:to-purple-500/10 rounded-3xl p-6 sm:p-8 border border-indigo-100 dark:border-indigo-500/20 shadow-sm mb-8">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-indigo-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30 flex-shrink-0">
+                        <Brain className="w-5 h-5" />
+                    </div>
+                    <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Training Insights</h2>
+                </div>
+
+                {stats.totalTests < 5 ? (
+                    <div className="flex items-center justify-center p-8 bg-white/50 dark:bg-[#0f172a]/50 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/10">
+                        <p className="text-slate-600 dark:text-slate-400 font-medium text-center">Complete at least 5 typing tests to unlock personalized analytics and drill recommendations.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="flex flex-col gap-4">
+                            <div className="bg-white/50 dark:bg-[#0f172a]/50 p-5 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/10 transition-colors flex-1 flex flex-col justify-center">
+                                <span className="text-xs font-bold text-emerald-500 tracking-widest uppercase mb-1">Peak Performance</span>
+                                <div className="text-lg font-black text-slate-900 dark:text-white">{analytics.strongestArea || "Analyzing..."}</div>
+                            </div>
+                            <div className="bg-white/50 dark:bg-[#0f172a]/50 p-5 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/10 transition-colors flex-1 flex flex-col justify-center">
+                                <span className="text-xs font-bold text-red-500 tracking-widest uppercase mb-1">Area to Improve</span>
+                                <div className="text-lg font-black text-slate-900 dark:text-white">{analytics.weakestArea || "Analyzing..."}</div>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-6 h-full">
+                            <div className="bg-white/50 dark:bg-[#0f172a]/50 p-6 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/10 flex flex-col justify-center">
+                                <span className="text-xs font-bold text-purple-500 tracking-widest uppercase mb-3 block">Accuracy Insights</span>
+                                <p className="text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
+                                    {analytics.accuracyInsight || "Calculating your precision metrics..."}
+                                </p>
+                            </div>
+
+                            <div className="bg-white/50 dark:bg-[#0f172a]/50 p-6 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/10 flex flex-col justify-center flex-1">
+                                <span className="text-xs font-bold text-amber-500 tracking-widest uppercase mb-3 block">Pain Points</span>
+                                {analytics.struggledLetters?.length > 0 || analytics.weakestArea ? (
+                                    <div className="space-y-4">
+                                        {analytics.struggledLetters?.length > 0 && (
+                                            <div>
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Keys</span>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {analytics.struggledLetters.map((l: string, i: number) => (
+                                                        <span key={i} className="px-2 py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono text-xs font-bold rounded-lg border border-amber-200 dark:border-amber-500/20 shadow-sm">{l}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {analytics.weakestArea && analytics.weakestArea !== "Not enough data" && (
+                                            <div>
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Challenge</span>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    <span className="px-2 py-1 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 font-mono text-xs font-bold rounded-lg border border-rose-200 dark:border-rose-500/20 shadow-sm">{analytics.weakestArea}</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
+                                        You haven't established specific mis-keys yet. Keep typing!
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="bg-indigo-500/5 dark:bg-indigo-500/10 p-6 rounded-2xl border border-indigo-500/20 flex flex-col justify-between h-full">
+                            <div>
+                                <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-2">Recommended Drill</h4>
+                                <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-5 leading-relaxed">
+                                    {analytics.recommendation || "Take a few more tests across different modes to get personalized insights."}
+                                </p>
+                            </div>
+                            {analytics.suggestedChallenge && (
+                                <Link
+                                    href={analytics.suggestedChallenge}
+                                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-md transition-colors w-full sm:w-auto mt-auto"
+                                >
+                                    Start Practice <Zap className="w-4 h-4" />
+                                </Link>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+
             {/* Chart Section */}
-            <div className="bg-white dark:bg-[#1e293b]/50 rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none transition-colors">
+            <div className="w-full bg-white dark:bg-[#1e293b]/50 rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none transition-colors mb-8">
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <h2 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
@@ -254,7 +341,7 @@ export default function DashboardPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Achievements */}
-                <div className="bg-white dark:bg-[#1e293b]/50 rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none transition-colors">
+                <div className="bg-white dark:bg-[#1e293b]/50 rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none transition-colors h-full flex flex-col">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                             <Trophy className="w-5 h-5 text-yellow-500" /> Achievements
@@ -262,7 +349,7 @@ export default function DashboardPage() {
                         <button onClick={() => setIsAchievementsOpen(true)} className="text-sm font-bold text-[#0ea5e9] hover:underline bg-transparent border-none cursor-pointer">View All</button>
                     </div>
 
-                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 flex-1 content-start">
                         <TooltipProvider>
                             {(achievements?.allList || []).map((achievement: any, i: number) => {
                                 const isUnlocked = (achievements?.unlocked || []).some((u: any) => u.achievementId === achievement.id);
@@ -288,14 +375,13 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* History */}
-                <div className="bg-white dark:bg-[#1e293b]/50 rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none flex flex-col transition-colors">
+                {/* Recent Tests */}
+                <div className="bg-white dark:bg-[#1e293b]/50 rounded-3xl p-6 sm:p-8 border border-slate-100 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none transition-colors h-full flex flex-col">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                             <Clock className="w-5 h-5 text-indigo-500" /> Recent Tests
                         </h2>
                     </div>
-
                     {recentTests.length === 0 ? (
                         <div className="flex-1 flex flex-col justify-center items-center text-center p-6 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50/50 dark:bg-[#1e293b]/50">
                             <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center shadow-sm border border-slate-100 dark:border-slate-700 mb-4">
@@ -330,125 +416,129 @@ export default function DashboardPage() {
             </div>
 
             {/* Basic Modals for custom routing states */}
-            {isShareOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in" onClick={() => setIsShareOpen(false)}>
-                    <div className="bg-white dark:bg-[#1e293b] w-full max-w-sm rounded-[2rem] p-8 shadow-2xl scale-in-center" onClick={e => e.stopPropagation()}>
-                        <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2 text-center">Share Your Stats</h3>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 text-center mb-6">Flex your Keysprint metrics instantly</p>
+            {
+                isShareOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in" onClick={() => setIsShareOpen(false)}>
+                        <div className="bg-white dark:bg-[#1e293b] w-full max-w-sm rounded-[2rem] p-8 shadow-2xl scale-in-center" onClick={e => e.stopPropagation()}>
+                            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2 text-center">Share Your Stats</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 text-center mb-6">Flex your Keysprint metrics instantly</p>
 
-                        <div className="mb-6 w-full max-w-[280px] mx-auto">
-                            <Swiper
-                                effect={'cards'}
-                                grabCursor={true}
-                                modules={[EffectCards, Pagination]}
-                                pagination={{ clickable: true, dynamicBullets: true }}
-                                className="w-full h-[220px]"
-                                onSlideChange={(swiper) => {
-                                    const protocols = ["standard", "paragraph", "developer", "daily"];
-                                    setActiveShareCard(protocols[swiper.activeIndex] || "standard");
-                                }}
-                            >
-                                {[
-                                    { id: "standard", label: "A-Z Standard", icon: Type, color: "from-cyan-500 to-blue-500" },
-                                    { id: "paragraph", label: "Paragraph", icon: AlignLeft, color: "from-blue-500 to-indigo-500" },
-                                    { id: "developer", label: "Developer", icon: Code2, color: "from-emerald-400 to-emerald-600" },
-                                    { id: "daily", label: "Daily Global", icon: CalendarDays, color: "from-purple-500 to-pink-500" }
-                                ].map((protocol) => {
-                                    const IconNode = protocol.icon;
-                                    const bestWpm = (stats as any).bestScores?.[protocol.id] || 0;
+                            <div className="mb-6 w-full max-w-[280px] mx-auto">
+                                <Swiper
+                                    effect={'cards'}
+                                    grabCursor={true}
+                                    modules={[EffectCards, Pagination]}
+                                    pagination={{ clickable: true, dynamicBullets: true }}
+                                    className="w-full h-[220px]"
+                                    onSlideChange={(swiper) => {
+                                        const protocols = ["standard", "paragraph", "developer", "daily"];
+                                        setActiveShareCard(protocols[swiper.activeIndex] || "standard");
+                                    }}
+                                >
+                                    {[
+                                        { id: "standard", label: "A-Z Standard", icon: Type, color: "from-cyan-500 to-blue-500" },
+                                        { id: "paragraph", label: "Paragraph", icon: AlignLeft, color: "from-blue-500 to-indigo-500" },
+                                        { id: "developer", label: "Developer", icon: Code2, color: "from-emerald-400 to-emerald-600" },
+                                        { id: "daily", label: "Daily Global", icon: CalendarDays, color: "from-purple-500 to-pink-500" }
+                                    ].map((protocol) => {
+                                        const IconNode = protocol.icon;
+                                        const bestWpm = (stats as any).bestScores?.[protocol.id] || 0;
+                                        return (
+                                            <SwiperSlide key={protocol.id} className={`rounded-3xl p-1 bg-gradient-to-br ${protocol.color} shadow-lg`}>
+                                                <div className="w-full h-full bg-white dark:bg-[#0f172a] rounded-[22px] flex flex-col items-center justify-center p-5 relative overflow-hidden">
+                                                    <IconNode className="absolute top-4 right-4 w-12 h-12 opacity-5 text-slate-900 dark:text-white pointer-events-none" />
+                                                    <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{protocol.label}</div>
+                                                    <div className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br border-none pb-1 mb-2" style={{ backgroundImage: `linear-gradient(to bottom right, var(--tw-gradient-stops))` }}>
+                                                        <span className={`bg-gradient-to-br ${protocol.color} bg-clip-text text-transparent`}>{bestWpm}</span>
+                                                    </div>
+                                                    <div className="w-full flex justify-between border-t border-slate-100 dark:border-slate-800 pt-3 text-xs font-bold mt-auto">
+                                                        <span className="text-slate-400">Record WPM</span>
+                                                        <span className="text-slate-900 dark:text-white flex items-center gap-1">Top Speed <Zap className="w-3 h-3 text-yellow-500" /></span>
+                                                    </div>
+                                                </div>
+                                            </SwiperSlide>
+                                        );
+                                    })}
+                                </Swiper>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 mb-3">
+                                <a
+                                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`I just hit a massive ${((stats as any).bestScores?.[activeShareCard] || 0)} WPM on the ${activeShareCard} challenge at Keysprint! Can you beat my high score? https://keysprint.in/share/${session?.user?.name}?protocol=${activeShareCard}`)}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="w-full py-3 bg-[#25D366] text-white rounded-xl font-bold text-sm hover:bg-[#128C7E] transition-colors flex items-center justify-center gap-2"
+                                >
+                                    WhatsApp
+                                </a>
+                                <a
+                                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`I just hit a massive ${((stats as any).bestScores?.[activeShareCard] || 0)} WPM on the ${activeShareCard} challenge at Keysprint! Can you beat my high score?`)}&url=https://keysprint.in/share/${session?.user?.name}?protocol=${activeShareCard}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="w-full py-3 bg-black text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    X (Twitter)
+                                </a>
+                            </div>
+                            <div className="space-y-3">
+                                <a
+                                    href={`mailto:?subject=Check out my Keysprint record!&body=${encodeURIComponent(`I just hit ${((stats as any).bestScores?.[activeShareCard] || 0)} WPM on the ${activeShareCard} challenge on Keysprint! Can you beat me?\n\nPlay here: https://keysprint.in/share/${session?.user?.name}?protocol=${activeShareCard}`)}`}
+                                    className="w-full flex justify-center py-3.5 bg-rose-500 text-white rounded-xl font-bold text-sm hover:bg-rose-600 transition-colors"
+                                >
+                                    Share via Email
+                                </a>
+                                <button
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(`I just hit ${((stats as any).bestScores?.[activeShareCard] || 0)} WPM on the ${activeShareCard} challenge at Keysprint! Can you beat my high score? https://keysprint.in/share/${session?.user?.name}?protocol=${activeShareCard}`);
+                                        alert('Copied to clipboard!');
+                                    }}
+                                    className="w-full py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold text-sm hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
+                                >
+                                    Copy Custom Link
+                                </button>
+                                <button onClick={() => setIsShareOpen(false)} className="w-full py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {
+                isAchievementsOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in" onClick={() => setIsAchievementsOpen(false)}>
+                        <div className="bg-white dark:bg-[#1e293b] w-full max-w-2xl rounded-[2rem] p-8 shadow-2xl scale-in-center max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                                    <Trophy className="w-6 h-6 text-yellow-500" /> All Achievements
+                                </h3>
+                                <button onClick={() => setIsAchievementsOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                                    ✕
+                                </button>
+                            </div>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Collect them all by demonstrating speed, consistency, and accuracy across various challenge modes.</p>
+
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                {(achievements?.allList || []).map((achievement: any, i: number) => {
+                                    const isUnlocked = (achievements?.unlocked || []).some((u: any) => u.achievementId === achievement.id);
+                                    const IconComponent = iconMap[achievement.icon] || Star;
+
                                     return (
-                                        <SwiperSlide key={protocol.id} className={`rounded-3xl p-1 bg-gradient-to-br ${protocol.color} shadow-lg`}>
-                                            <div className="w-full h-full bg-white dark:bg-[#0f172a] rounded-[22px] flex flex-col items-center justify-center p-5 relative overflow-hidden">
-                                                <IconNode className="absolute top-4 right-4 w-12 h-12 opacity-5 text-slate-900 dark:text-white pointer-events-none" />
-                                                <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{protocol.label}</div>
-                                                <div className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br border-none pb-1 mb-2" style={{ backgroundImage: `linear-gradient(to bottom right, var(--tw-gradient-stops))` }}>
-                                                    <span className={`bg-gradient-to-br ${protocol.color} bg-clip-text text-transparent`}>{bestWpm}</span>
-                                                </div>
-                                                <div className="w-full flex justify-between border-t border-slate-100 dark:border-slate-800 pt-3 text-xs font-bold mt-auto">
-                                                    <span className="text-slate-400">Record WPM</span>
-                                                    <span className="text-slate-900 dark:text-white flex items-center gap-1">Top Speed <Zap className="w-3 h-3 text-yellow-500" /></span>
-                                                </div>
+                                        <div key={i} className={`flex flex-col items-center justify-center p-4 rounded-3xl border ${isUnlocked ? 'bg-yellow-50/50 dark:bg-yellow-500/10 border-yellow-200/50 dark:border-yellow-500/20' : 'bg-slate-50/50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 opacity-60'} transition-all text-center h-full`}>
+                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border mb-3 ${isUnlocked ? 'bg-gradient-to-br from-yellow-300 to-yellow-500 border-yellow-400 text-white' : 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-400'}`}>
+                                                <IconComponent className="w-7 h-7" />
                                             </div>
-                                        </SwiperSlide>
+                                            <h4 className={`font-bold text-sm mb-1 ${isUnlocked ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>{achievement.title}</h4>
+                                            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 leading-snug">{achievement.description}</p>
+                                        </div>
                                     );
                                 })}
-                            </Swiper>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3 mb-3">
-                            <a
-                                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`I just hit a massive ${((stats as any).bestScores?.[activeShareCard] || 0)} WPM on the ${activeShareCard} challenge at Keysprint! Can you beat my high score? https://keysprint.in/share/${session?.user?.name}?protocol=${activeShareCard}`)}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="w-full py-3 bg-[#25D366] text-white rounded-xl font-bold text-sm hover:bg-[#128C7E] transition-colors flex items-center justify-center gap-2"
-                            >
-                                WhatsApp
-                            </a>
-                            <a
-                                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`I just hit a massive ${((stats as any).bestScores?.[activeShareCard] || 0)} WPM on the ${activeShareCard} challenge at Keysprint! Can you beat my high score?`)}&url=https://keysprint.in/share/${session?.user?.name}?protocol=${activeShareCard}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="w-full py-3 bg-black text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
-                            >
-                                X (Twitter)
-                            </a>
-                        </div>
-                        <div className="space-y-3">
-                            <a
-                                href={`mailto:?subject=Check out my Keysprint record!&body=${encodeURIComponent(`I just hit ${((stats as any).bestScores?.[activeShareCard] || 0)} WPM on the ${activeShareCard} challenge on Keysprint! Can you beat me?\n\nPlay here: https://keysprint.in/share/${session?.user?.name}?protocol=${activeShareCard}`)}`}
-                                className="w-full flex justify-center py-3.5 bg-rose-500 text-white rounded-xl font-bold text-sm hover:bg-rose-600 transition-colors"
-                            >
-                                Share via Email
-                            </a>
-                            <button
-                                onClick={() => {
-                                    navigator.clipboard.writeText(`I just hit ${((stats as any).bestScores?.[activeShareCard] || 0)} WPM on the ${activeShareCard} challenge at Keysprint! Can you beat my high score? https://keysprint.in/share/${session?.user?.name}?protocol=${activeShareCard}`);
-                                    alert('Copied to clipboard!');
-                                }}
-                                className="w-full py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold text-sm hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
-                            >
-                                Copy Custom Link
-                            </button>
-                            <button onClick={() => setIsShareOpen(false)} className="w-full py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                                Close
-                            </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-
-            {isAchievementsOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in" onClick={() => setIsAchievementsOpen(false)}>
-                    <div className="bg-white dark:bg-[#1e293b] w-full max-w-2xl rounded-[2rem] p-8 shadow-2xl scale-in-center max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-                                <Trophy className="w-6 h-6 text-yellow-500" /> All Achievements
-                            </h3>
-                            <button onClick={() => setIsAchievementsOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-                                ✕
-                            </button>
-                        </div>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Collect them all by demonstrating speed, consistency, and accuracy across various challenge modes.</p>
-
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                            {(achievements?.allList || []).map((achievement: any, i: number) => {
-                                const isUnlocked = (achievements?.unlocked || []).some((u: any) => u.achievementId === achievement.id);
-                                const IconComponent = iconMap[achievement.icon] || Star;
-
-                                return (
-                                    <div key={i} className={`flex flex-col items-center justify-center p-4 rounded-3xl border ${isUnlocked ? 'bg-yellow-50/50 dark:bg-yellow-500/10 border-yellow-200/50 dark:border-yellow-500/20' : 'bg-slate-50/50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 opacity-60'} transition-all text-center h-full`}>
-                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border mb-3 ${isUnlocked ? 'bg-gradient-to-br from-yellow-300 to-yellow-500 border-yellow-400 text-white' : 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-400'}`}>
-                                            <IconComponent className="w-7 h-7" />
-                                        </div>
-                                        <h4 className={`font-bold text-sm mb-1 ${isUnlocked ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>{achievement.title}</h4>
-                                        <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 leading-snug">{achievement.description}</p>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }

@@ -72,15 +72,50 @@ export default function PlayCustomChallengePage() {
         const timeTakenMin = timeTakenSec / 60;
 
         let correctChars = 0;
+        const missedChars: Record<string, number> = {};
+
         for (let i = 0; i < challenge.content.length; i++) {
-            if (finalInput[i] === challenge.content[i]) correctChars++;
+            if (finalInput[i] === challenge.content[i]) {
+                correctChars++;
+            } else if (challenge.content[i]) {
+                const char = challenge.content[i].toLowerCase();
+                if (char.trim()) {
+                    missedChars[char] = (missedChars[char] || 0) + 1;
+                }
+            }
         }
+
+        const missedWords: Record<string, number> = {};
+        const originalWords = challenge.content.split(/\s+/);
+        const inputWords = finalInput.split(/\s+/);
+
+        originalWords.forEach((word: string, index: number) => {
+            if (inputWords[index] !== word) {
+                const cleanWord = word.replace(/[^\w]/g, '').toLowerCase();
+                if (cleanWord.length > 0) {
+                    missedWords[cleanWord] = (missedWords[cleanWord] || 0) + 1;
+                }
+            }
+        });
 
         const accuracy = Math.round((correctChars / challenge.content.length) * 100);
         const wpm = Math.round((correctChars / 5) / (timeTakenMin || 1));
 
         setStats({ wpm, accuracy, time: Math.round(timeTakenSec) });
         // Can optionally post score to global leaderboard from here too if needed
+        // Since it's a typing test, we can use the same generic results endpoint:
+        fetch("/api/results", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                challengeType: "custom", // Note: You might map this to developer/standard based on content type if desired
+                wpm,
+                accuracy,
+                timeTaken: Math.round(timeTakenSec),
+                missedChars,
+                missedWords
+            })
+        }).catch(err => console.error(err));
     };
 
     const resetGame = () => {

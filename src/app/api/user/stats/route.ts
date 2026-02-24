@@ -99,6 +99,132 @@ export async function GET(req: Request) {
                 wpm: t.wpm
             }));
 
+        // --- Analytics / Training Insights Engine ---
+        let weakArea = "Not enough data";
+        let strongArea = "Keep practicing!";
+        let accuracyInsight = "Play more to get insights on your precision.";
+        let recommendation = "Take a few more tests across different modes to get personalized insights!";
+        let suggestedChallenge = "/challenge";
+
+        let struggledLetters: string[] = [];
+        let struggledWords: string[] = [];
+
+        if (totalTests >= 5) {
+            // Aggregate struggled letters and words
+            const globalMissedChars: Record<string, number> = {};
+            const globalMissedWords: Record<string, number> = {};
+
+            tests.forEach(t => {
+                const missedCharsMap = t.get('missedChars');
+                if (missedCharsMap) {
+                    for (const [char, count] of missedCharsMap.entries()) {
+                        globalMissedChars[char] = (globalMissedChars[char] || 0) + (count as number);
+                    }
+                }
+                const missedWordsMap = t.get('missedWords');
+                if (missedWordsMap) {
+                    for (const [word, count] of missedWordsMap.entries()) {
+                        globalMissedWords[word] = (globalMissedWords[word] || 0) + (count as number);
+                    }
+                }
+            });
+
+            struggledLetters = Object.entries(globalMissedChars)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3)
+                .map(e => e[0]);
+
+            struggledWords = Object.entries(globalMissedWords)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3)
+                .map(e => e[0]);
+
+            // Group tests by type
+            const typeMetrics: Record<string, { totalWpm: number, totalAcc: number, count: number }> = {};
+            tests.forEach(t => {
+                const type = (t.challengeType || 'standard').toLowerCase();
+                if (!typeMetrics[type]) typeMetrics[type] = { totalWpm: 0, totalAcc: 0, count: 0 };
+                typeMetrics[type].totalWpm += t.wpm;
+                typeMetrics[type].totalAcc += t.accuracy;
+                typeMetrics[type].count += 1;
+            });
+
+            // Find the active type where they perform the worst and best relative to global average
+            let lowestDelta = Infinity;
+            let highestDelta = -Infinity;
+            let weakestType = null;
+            let strongestType = null;
+
+            for (const [type, data] of Object.entries(typeMetrics)) {
+                if (data.count > 0) {
+                    const typeAvgWpm = data.totalWpm / data.count;
+                    const delta = typeAvgWpm - avgWpm;
+
+                    if (delta < lowestDelta) {
+                        lowestDelta = delta;
+                        weakestType = type;
+                    }
+                    if (delta > highestDelta) {
+                        highestDelta = delta;
+                        strongestType = type;
+                    }
+                }
+            }
+
+            // Strong Area Text
+            if (strongestType === 'developer') strongArea = "Developer Snippets";
+            else if (strongestType === 'paragraph') strongArea = "Paragraph Endurance";
+            else if (strongestType === 'standard') strongArea = "Standard Reflexes";
+            else if (strongestType === 'daily') strongArea = "Daily Global";
+            else strongArea = "Consistency";
+
+            // Weak Area & Recommendations Text
+            if (weakestType) {
+                if (weakestType === 'developer') {
+                    weakArea = "Developer Snippets";
+                    recommendation = "You're dropping speed on special characters and symbols. Practice the Developer mode specifically to build muscle memory for brackets, semi-colons, and syntax format.";
+                    suggestedChallenge = "/challenge/developer";
+                } else if (weakestType === 'paragraph') {
+                    weakArea = "Paragraph Endurance";
+                    recommendation = "Your endurance is wavering on longer prose. Start focusing on rhythm rather than raw speed bursts. Run the Paragraph challenge daily.";
+                    suggestedChallenge = "/challenge/paragraph";
+                } else if (weakestType === 'standard') {
+                    weakArea = "Standard Reflexes";
+                    recommendation = "Your raw reflex speed on random words is holding you back. Warm up with 5 quick Standard tests to increase baseline input speed.";
+                    suggestedChallenge = "/challenge/standard";
+                } else {
+                    weakArea = "Global Modifiers";
+                    recommendation = "You're performing well consistently, but you can push deeper on the daily challenges to compete with the globe.";
+                    suggestedChallenge = "/challenge/daily";
+                }
+            }
+
+            // Formulate dynamic recommendation based on missed elements if sufficient
+            if (struggledLetters.length > 0) {
+                recommendation += ` Watch your accuracy on the specific keys: ${struggledLetters.map(l => `'${l}'`).join(', ')}.`;
+            }
+
+            // Accuracy Insight
+            const avgOverallAcc = tests.reduce((acc, t) => acc + t.accuracy, 0) / totalTests;
+            if (avgOverallAcc < 90) {
+                accuracyInsight = `Your overall accuracy is ${avgOverallAcc.toFixed(1)}%. You are rushing! Slow down to build accuracy, and speed will follow naturally.`;
+            } else if (avgOverallAcc < 95) {
+                accuracyInsight = `Solid precision at ${avgOverallAcc.toFixed(1)}%. Aim for 96%+ to eliminate time wasted on backspaces.`;
+            } else {
+                accuracyInsight = `Incredible precision (${avgOverallAcc.toFixed(1)}%). You are ready to start pushing your raw speed to the absolute limit.`;
+            }
+        }
+
+        const analytics = {
+            weakestArea: weakArea,
+            strongestArea: strongArea,
+            accuracyInsight,
+            recommendation,
+            suggestedChallenge,
+            struggledLetters,
+            struggledWords
+        };
+
         // Send back calculated static stats + db unlocked achievements
         return NextResponse.json({
             stats: {
@@ -113,7 +239,8 @@ export async function GET(req: Request) {
             achievements: {
                 unlocked: user.unlockedAchievements || [],
                 allList: ACHIEVEMENTS
-            }
+            },
+            analytics
         }, { status: 200 });
     } catch (error: any) {
         return NextResponse.json(

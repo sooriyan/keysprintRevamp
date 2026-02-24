@@ -33,7 +33,19 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, error: "Title and content are required" }, { status: 400 });
         }
 
-        if (content.length < 50 || content.length > 2000) {
+        // Aggressively normalize text so that it uses standard typeable keyboard characters
+        const normalizedContent = content
+            .replace(/[\u2018\u2019\u201B\u201A\u2039\u203A\u00B4\u0060]/g, "'") // Various single/smart quotes
+            .replace(/[\u201C\u201D\u201E\u201F\u00AB\u00BB]/g, '"') // Various double quotes
+            .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212]/g, "-") // Various dashes and hyphens
+            .replace(/\u2026/g, "...")        // Ellipsis
+            .replace(/[\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000]/g, " ") // Unicode spaces to normal space
+            .replace(/[\u200B-\u200D\uFEFF]/g, "") // Remove zero-width chars
+            .replace(/\t/g, "    ")           // Convert tabs to 4 spaces
+            .replace(/[^\x20-\x7E\n]/g, "") // STRICT: Keep only basic printable ASCII + newline
+            .trim();
+
+        if (normalizedContent.length < 50 || normalizedContent.length > 2000) {
             return NextResponse.json({ success: false, error: "Content must be between 50 and 2000 characters." }, { status: 400 });
         }
 
@@ -41,7 +53,7 @@ export async function POST(req: NextRequest) {
 
         const newChallenge = await CustomChallenge.create({
             title,
-            content,
+            content: normalizedContent,
             creator: (session.user as any).id,
             creatorName: session.user.name || "Anonymous",
         });

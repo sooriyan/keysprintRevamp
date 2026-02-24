@@ -98,9 +98,31 @@ export default function ChallengeGamePage() {
         const timeTakenMin = timeTakenSec / 60;
 
         let correctChars = 0;
+        const missedChars: Record<string, number> = {};
+
         for (let i = 0; i < originalText.length; i++) {
-            if (finalInput[i] === originalText[i]) correctChars++;
+            if (finalInput[i] === originalText[i]) {
+                correctChars++;
+            } else if (originalText[i]) {
+                const char = originalText[i].toLowerCase();
+                if (char.trim()) { // Don't count spaces as missed characters generally
+                    missedChars[char] = (missedChars[char] || 0) + 1;
+                }
+            }
         }
+
+        const missedWords: Record<string, number> = {};
+        const originalWords = originalText.split(/\s+/);
+        const inputWords = finalInput.split(/\s+/);
+
+        originalWords.forEach((word, index) => {
+            if (inputWords[index] !== word) {
+                const cleanWord = word.replace(/[^\w]/g, '').toLowerCase();
+                if (cleanWord.length > 0) {
+                    missedWords[cleanWord] = (missedWords[cleanWord] || 0) + 1;
+                }
+            }
+        });
 
         const accuracy = Math.round((correctChars / originalText.length) * 100);
         // Standard formula: (total characters / 5) / time in min. Here we use correctChars for net WPM.
@@ -118,7 +140,9 @@ export default function ChallengeGamePage() {
                     challengeType: id,
                     wpm,
                     accuracy,
-                    timeTaken: Math.round(timeTakenSec)
+                    timeTaken: Math.round(timeTakenSec),
+                    missedChars,
+                    missedWords
                 })
             });
         } catch (error) {

@@ -13,7 +13,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ message: "Guest result processed locally", saved: false }, { status: 200 });
         }
 
-        const { challengeType, wpm, accuracy, timeTaken } = await req.json();
+        const { challengeType, wpm, accuracy, timeTaken, missedChars, missedWords } = await req.json();
 
         if (!challengeType || wpm === undefined || accuracy === undefined || timeTaken === undefined) {
             return NextResponse.json({ message: "Invalid payload data" }, { status: 400 });
@@ -26,7 +26,9 @@ export async function POST(req: Request) {
             challengeType,
             wpm,
             accuracy,
-            timeTaken
+            timeTaken,
+            missedChars: missedChars || {},
+            missedWords: missedWords || {}
         });
 
         return NextResponse.json({ message: "Result saved to database", saved: true, result: newResult }, { status: 201 });

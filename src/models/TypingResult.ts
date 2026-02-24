@@ -6,6 +6,8 @@ export interface ITypingResult extends Document {
     wpm: number;
     accuracy: number;
     timeTaken: number;
+    missedChars?: Map<string, number>;
+    missedWords?: Map<string, number>;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -33,6 +35,16 @@ const TypingResultSchema: Schema = new Schema(
         timeTaken: {
             type: Number,
             required: true,
+        },
+        missedChars: {
+            type: Map,
+            of: Number,
+            default: {},
+        },
+        missedWords: {
+            type: Map,
+            of: Number,
+            default: {},
         },
     },
     {
