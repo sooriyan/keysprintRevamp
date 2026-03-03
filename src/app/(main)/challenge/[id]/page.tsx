@@ -50,21 +50,25 @@ const playAsmrKeystroke = () => {
         if (audioCtx.state === 'suspended') {
             audioCtx.resume();
         }
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
 
-        // Mechanical brown/blue switch "thock" profile
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(250, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.04);
+        const time = audioCtx.currentTime;
 
-        gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+        // --- Layer 1: The "Click" (High-frequency transient) ---
+        const clickOsc = audioCtx.createOscillator();
+        const clickGain = audioCtx.createGain();
+        clickOsc.type = 'triangle';
+        clickOsc.frequency.setValueAtTime(1000, time);
+        clickOsc.frequency.exponentialRampToValueAtTime(100, time + 0.015);
 
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.04);
+        clickGain.gain.setValueAtTime(0, time);
+        clickGain.gain.linearRampToValueAtTime(0.25, time + 0.002);
+        clickGain.gain.exponentialRampToValueAtTime(0.001, time + 0.02);
+
+        clickOsc.connect(clickGain);
+        clickGain.connect(audioCtx.destination);
+        clickOsc.start(time);
+        clickOsc.stop(time + 0.02);
+
     } catch (e) {
         // Ignore audio errors if browser blocks autoplay before interaction
     }
