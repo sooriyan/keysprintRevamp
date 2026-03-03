@@ -345,6 +345,11 @@ export default function ChallengeGamePage() {
                                         : stats.accuracy < 96
                                             ? "Solid typing! Try to eliminate those few remaining typos to significantly boost your net WPM."
                                             : "Incredible precision! You can start pushing your boundaries on speed since your accuracy is locked in."}
+                                    {maxKeyDelay > 0 && (
+                                        <span className="block mt-2 font-bold text-amber-500/90 dark:text-amber-400">
+                                            Longest Pause: {maxKeyDelay}ms
+                                        </span>
+                                    )}
                                 </p>
                             </div>
                             <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700/50 flex flex-col justify-center">

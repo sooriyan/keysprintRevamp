@@ -215,6 +215,20 @@ export async function GET(req: Request) {
             }
         }
 
+        // Global Max Pause Tracking
+        let longestPauseOverall = 0;
+        tests.forEach(t => {
+            const maxLetters = t.get('maxTimeBetweenLetters') || 0;
+            const maxWords = t.get('maxTimeBetweenWords') || 0;
+
+            if (maxLetters > longestPauseOverall) {
+                longestPauseOverall = maxLetters;
+            }
+            if (maxWords > longestPauseOverall) {
+                longestPauseOverall = maxWords;
+            }
+        });
+
         const analytics = {
             weakestArea: weakArea,
             strongestArea: strongArea,
@@ -222,7 +236,8 @@ export async function GET(req: Request) {
             recommendation,
             suggestedChallenge,
             struggledLetters,
-            struggledWords
+            struggledWords,
+            longestPauseOverall
         };
 
         // Send back calculated static stats + db unlocked achievements

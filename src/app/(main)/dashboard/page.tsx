@@ -198,6 +198,10 @@ export default function DashboardPage() {
                                 <span className="text-xs font-bold text-red-500 tracking-widest uppercase mb-1">Area to Improve</span>
                                 <div className="text-lg font-black text-slate-900 dark:text-white">{analytics.weakestArea || "Analyzing..."}</div>
                             </div>
+                            <div className="bg-white/50 dark:bg-[#0f172a]/50 p-5 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/10 transition-colors flex-1 flex flex-col justify-center">
+                                <span className="text-xs font-bold text-amber-500 tracking-widest uppercase mb-1">Peak Keys Pause</span>
+                                <div className="text-lg font-black text-slate-900 dark:text-white">{(analytics as any).longestPauseOverall ? `${(analytics as any).longestPauseOverall} ms` : "0 ms"}</div>
+                            </div>
                         </div>
 
                         <div className="flex flex-col gap-6 h-full">
