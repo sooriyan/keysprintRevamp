@@ -217,12 +217,14 @@ export async function GET(req: Request) {
 
         // Global Max Pause Tracking
         let longestPauseOverall = 0;
+        let longestPauseKeys = { from: "", to: "" };
         tests.forEach(t => {
             const maxLetters = t.get('maxTimeBetweenLetters') || 0;
             const maxWords = t.get('maxTimeBetweenWords') || 0;
 
             if (maxLetters > longestPauseOverall) {
                 longestPauseOverall = maxLetters;
+                longestPauseKeys = t.get('longestPauseKeys') || { from: "", to: "" };
             }
             if (maxWords > longestPauseOverall) {
                 longestPauseOverall = maxWords;
@@ -237,7 +239,8 @@ export async function GET(req: Request) {
             suggestedChallenge,
             struggledLetters,
             struggledWords,
-            longestPauseOverall
+            longestPauseOverall,
+            longestPauseKeys
         };
 
         // Send back calculated static stats + db unlocked achievements

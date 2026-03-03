@@ -40,6 +40,36 @@ function getDailyIndex(max: number) {
     return seed % max;
 }
 
+// Global ASMR Audio Context Helper to avoid recreation overhead
+let audioCtx: AudioContext | null = null;
+const playAsmrKeystroke = () => {
+    try {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        // Mechanical brown/blue switch "thock" profile
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(250, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.04);
+
+        gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.04);
+    } catch (e) {
+        // Ignore audio errors if browser blocks autoplay before interaction
+    }
+};
+
 export default function ChallengeGamePage() {
     const params = useParams();
     const router = useRouter();
@@ -69,6 +99,7 @@ export default function ChallengeGamePage() {
     const [avgWordDelay, setAvgWordDelay] = useState(0);
     const [maxKeyDelay, setMaxKeyDelay] = useState(0);
     const [maxWordDelay, setMaxWordDelay] = useState(0);
+    const [longestPauseKeys, setLongestPauseKeys] = useState<{ from: string, to: string }>({ from: "", to: "" });
     const [saving, setSaving] = useState(false);
     const [isShareOpen, setIsShareOpen] = useState(false);
 
@@ -77,6 +108,7 @@ export default function ChallengeGamePage() {
     const lastWordTimeRef = useRef<number>(0);
     const maxKeyDelayRef = useRef<number>(0);
     const maxWordDelayRef = useRef<number>(0);
+    const maxDelayKeysRef = useRef<{ from: string, to: string }>({ from: "", to: "" });
 
     // Focus input on mount
     useEffect(() => {
@@ -97,12 +129,21 @@ export default function ChallengeGamePage() {
             lastWordTimeRef.current = now;
             maxKeyDelayRef.current = 0;
             maxWordDelayRef.current = 0;
+            maxDelayKeysRef.current = { from: "", to: "" };
         }
 
         if (status === "playing" && value.length > input.length) {
+            playAsmrKeystroke();
             const now = Date.now();
             const keyDelay = now - lastKeyTimeRef.current;
-            maxKeyDelayRef.current = Math.max(maxKeyDelayRef.current, keyDelay);
+
+            if (keyDelay > maxKeyDelayRef.current) {
+                maxKeyDelayRef.current = keyDelay;
+                const prevChar = input.length > 0 ? originalText[input.length - 1] : "Start";
+                const currChar = originalText[input.length] || "End";
+                maxDelayKeysRef.current = { from: prevChar === ' ' ? 'Space' : prevChar, to: currChar === ' ' ? 'Space' : currChar };
+            }
+
             lastKeyTimeRef.current = now;
 
             if (value.endsWith(' ') && !input.endsWith(' ')) {
@@ -171,6 +212,7 @@ export default function ChallengeGamePage() {
         setAvgWordDelay(avgWordTime);
         setMaxKeyDelay(maxKeyDelayRef.current);
         setMaxWordDelay(finalMaxWordDelay);
+        setLongestPauseKeys(maxDelayKeysRef.current);
 
         // Save to DB
         setSaving(true);
@@ -188,7 +230,8 @@ export default function ChallengeGamePage() {
                     avgTimeBetweenLetters: avgCharTime,
                     avgTimeBetweenWords: avgWordTime,
                     maxTimeBetweenLetters: maxKeyDelayRef.current,
-                    maxTimeBetweenWords: finalMaxWordDelay
+                    maxTimeBetweenWords: finalMaxWordDelay,
+                    longestPauseKeys: maxDelayKeysRef.current
                 })
             });
         } catch (error) {
@@ -229,6 +272,8 @@ export default function ChallengeGamePage() {
         lastWordTimeRef.current = 0;
         maxKeyDelayRef.current = 0;
         maxWordDelayRef.current = 0;
+        maxDelayKeysRef.current = { from: "", to: "" };
+        setLongestPauseKeys({ from: "", to: "" });
 
         // Force focus back to textarea
         setTimeout(() => {
@@ -346,8 +391,15 @@ export default function ChallengeGamePage() {
                                             ? "Solid typing! Try to eliminate those few remaining typos to significantly boost your net WPM."
                                             : "Incredible precision! You can start pushing your boundaries on speed since your accuracy is locked in."}
                                     {maxKeyDelay > 0 && (
-                                        <span className="block mt-2 font-bold text-amber-500/90 dark:text-amber-400">
-                                            Longest Pause: {maxKeyDelay}ms
+                                        <span className="block mt-3 p-3 bg-amber-50 dark:bg-amber-500/10 rounded-xl border border-amber-200 dark:border-amber-500/20 shadow-sm text-sm">
+                                            <span className="font-bold text-amber-600 dark:text-amber-400 block mb-1">
+                                                Longest Pause: {maxKeyDelay}ms
+                                            </span>
+                                            {longestPauseKeys.from && longestPauseKeys.to && (
+                                                <span className="text-amber-700/80 dark:text-amber-200/60 font-medium text-xs">
+                                                    You hesitated transitioning from <strong className="font-mono bg-white dark:bg-slate-900 px-1 py-0.5 rounded mx-0.5 border border-amber-200/50 dark:border-amber-700/50">'{longestPauseKeys.from}'</strong> to <strong className="font-mono bg-white dark:bg-slate-900 px-1 py-0.5 rounded mx-0.5 border border-amber-200/50 dark:border-amber-700/50">'{longestPauseKeys.to}'</strong>.
+                                                </span>
+                                            )}
                                         </span>
                                     )}
                                 </p>

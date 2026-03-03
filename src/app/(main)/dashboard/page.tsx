@@ -200,7 +200,12 @@ export default function DashboardPage() {
                             </div>
                             <div className="bg-white/50 dark:bg-[#0f172a]/50 p-5 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/10 transition-colors flex-1 flex flex-col justify-center">
                                 <span className="text-xs font-bold text-amber-500 tracking-widest uppercase mb-1">Peak Keys Pause</span>
-                                <div className="text-lg font-black text-slate-900 dark:text-white">{(analytics as any).longestPauseOverall ? `${(analytics as any).longestPauseOverall} ms` : "0 ms"}</div>
+                                <div className="text-lg font-black text-slate-900 dark:text-white mb-1">{(analytics as any).longestPauseOverall ? `${(analytics as any).longestPauseOverall} ms` : "0 ms"}</div>
+                                {(analytics as any).longestPauseKeys?.from && (
+                                    <div className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                                        Between <strong className="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">{(analytics as any).longestPauseKeys.from}</strong> and <strong className="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">{(analytics as any).longestPauseKeys.to}</strong>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

@@ -11,6 +11,7 @@ export interface ITypingResult extends Document {
     avgTimeBetweenLetters?: number;
     avgTimeBetweenWords?: number;
     maxTimeBetweenLetters?: number;
+    longestPauseKeys?: { from: string; to: string };
     maxTimeBetweenWords?: number;
     createdAt: Date;
     updatedAt: Date;
@@ -61,6 +62,10 @@ const TypingResultSchema: Schema = new Schema(
         maxTimeBetweenLetters: {
             type: Number,
             default: 0,
+        },
+        longestPauseKeys: {
+            from: { type: String, default: "" },
+            to: { type: String, default: "" }
         },
         maxTimeBetweenWords: {
             type: Number,
